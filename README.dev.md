@@ -18,4 +18,4 @@
 
 ## Запуск
 1. `uv sync`
-2. `uv run uvicorn main:app --reload --port 8000`
+2. `uv run uvicorn src.app.main:app --reload --port 8000`
