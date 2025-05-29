@@ -46,15 +46,15 @@
 
                     {% for cat in keyword_categories %}
                         <div class="mb-3">
-                            <label for="{{ cat|lower }}_min" class="form-label">{{ cat }}</label>
+                            <label for="{{ cat }}_min" class="form-label">{{ cat }}</label>
                             <input
                                 type="number"
-                                id="{{ cat|lower }}_min"
-                                name="{{ cat|lower }}_min"
+                                id="{{ cat }}_min"
+                                name="{{ cat }}_min"
                                 class="form-control"
                                 min="0"
                                 placeholder="Min matches"
-                                value="{{ request.query_params.get(cat|lower ~ '_min', '0') }}"
+                                value="{{ request.query_params.get(cat ~ '_min', '0') }}"
                             >
                             <small class="text-muted">Требуемое минимальное число совпадений</small>
                         </div>

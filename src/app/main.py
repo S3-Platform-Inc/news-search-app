@@ -10,7 +10,7 @@ app = FastAPI(title="News Feed API")
 templates_dir = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(templates_dir))
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 
 keyword_lists = ['НСПК', 'Мошенничество']
 
@@ -41,6 +41,11 @@ news_db = [
              link='https://example.com/', source="Bloomberg", seen=False, keyword_matches={
                                                                 "НСПК": [],
                                                                 "Мошенничество": []
+                                                            }),
+    NewsItem(id=4, title="ex4", abstract="Example", category="Hello",
+             link='https://example.com/', source="Hello", seen=False, keyword_matches={
+                                                                "НСПК": [],
+                                                                "Мошенничество": ['yes']
                                                             }),
 ]
 
@@ -77,8 +82,10 @@ async def read_news(
 
     # Dynamic keyword-based filters
     for category_name, min_count in request.query_params.items():
+        print('category_name: ',category_name)
         if category_name.endswith("_min"):
-            keyword_category = category_name.replace("_min", "").title()
+            keyword_category = category_name.replace("_min", "")
+            print('keyword_category: ',keyword_category)
             if keyword_category in keyword_lists:
                 try:
                     min_val = int(min_count)
@@ -87,6 +94,7 @@ async def read_news(
                             n for n in filtered_news
                             if len(n.keyword_matches.get(keyword_category, [])) >= min_val
                         ]
+                        print('filtered_news: ',filtered_news)
                 except ValueError:
                     pass  # invalid value, skip
 
