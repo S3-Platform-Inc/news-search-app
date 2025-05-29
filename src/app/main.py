@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request, Query
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 app = FastAPI(title="News Feed API")
 templates_dir = Path(__file__).parent / "templates"
@@ -19,17 +19,32 @@ class NewsItem(BaseModel):
     content: str
     category: str
     source: str
-    seen: bool = False  # New field
+    seen: bool = False  # Просмотрено
+    keyword_matches: Dict[str, List[str]] = {}  # e.g., {"Politics": ["government", "law"], ...}
 
 
 # Sample news data
 news_db = [
     NewsItem(id=1, title="AI Breakthrough", content="New developments in AI...", category="Technology",
-             source="TechCrunch", seen=False),
-    NewsItem(id=2, title="Global Warming", content="Climate summit concludes...", category="Science", source="BBC", seen=False),
+             source="TechCrunch", seen=False, keyword_matches={
+                                                                "Politics": ["law"],
+                                                                "Sports": [],
+                                                                "Health": ["virus"]
+                                                            }),
+    NewsItem(id=2, title="Global Warming", content="Climate summit concludes...", category="Science", source="BBC",
+             seen=False, keyword_matches={
+                                                                "Politics": ["government"],
+                                                                "Sports": ["sport"],
+                                                                "Health": []
+                                                            }),
     NewsItem(id=3, title="Stock Market", content="Markets rally on new data...", category="Finance",
-             source="Bloomberg", seen=False),
+             source="Bloomberg", seen=False, keyword_matches={
+                                                                "Politics": [],
+                                                                "Sports": [],
+                                                                "Health": []
+                                                            }),
 ]
+
 
 @app.post("/mark-seen/{news_id}")
 async def mark_as_seen(news_id: int):
@@ -38,6 +53,7 @@ async def mark_as_seen(news_id: int):
             news.seen = True
             return {"status": "success"}
     return {"status": "not found"}
+
 
 @app.get("/", response_class=HTMLResponse)
 async def read_news(

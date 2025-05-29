@@ -46,28 +46,43 @@
                 <h2>Latest News</h2>
                 <div class="row">
                     {% for news in news_items %}
-    <div class="col-md-6 mb-4">
-        <div class="card h-100 {% if news.seen %}border-success{% endif %}">
-            <div class="card-body">
-                <h5 class="card-title">{{ news.title }}</h5>
-                <p class="card-text">{{ news.content[:150] }}...</p>
-                <div class="d-flex justify-content-between">
-                    <span class="badge bg-secondary">{{ news.category }}</span>
-                    <small class="text-muted">{{ news.source }}</small>
-                </div>
-
-                <!-- Mark as Seen Button -->
-                {% if not news.seen %}
-                    <form onsubmit="markSeen(event, {{ news.id }})" class="mt-3">
-                        <button type="submit" class="btn btn-sm btn-outline-primary">Mark as Seen</button>
-                    </form>
-                {% else %}
-                    <small class="text-success mt-2 d-block">✓ Seen</small>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-{% endfor %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 {% if news.seen %}border-success{% endif %}">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ news.title }}</h5>
+                                    <p class="card-text">{{ news.content[:150] }}...</p>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="badge bg-secondary">{{ news.category }}</span>
+                                        <small class="text-muted">{{ news.source }}</small>
+                                    </div>
+                                    <div class="mt-2">
+                                        {% set has_matches = false %}
+                                        {% for category, matches in news.keyword_matches.items() %}
+                                            {% if matches %}
+                                                <span class="badge bg-info me-1">
+                                                    {{ category }}: {{ matches|length }}
+                                                </span>
+                                                {% set has_matches = true %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        <!--
+                                        {% if not has_matches %}
+                                            <small class="text-muted">No keyword matches</small>
+                                        {% endif %}
+                                        -->
+                                    </div>
+                                    <!-- Mark as Seen Button -->
+                                    {% if not news.seen %}
+                                        <form onsubmit="markSeen(event, {{ news.id }})" class="mt-3">
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">Mark as Seen</button>
+                                        </form>
+                                    {% else %}
+                                        <small class="text-success mt-2 d-block">✓ Seen</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
