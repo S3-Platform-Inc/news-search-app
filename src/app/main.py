@@ -19,17 +19,25 @@ class NewsItem(BaseModel):
     content: str
     category: str
     source: str
+    seen: bool = False  # New field
 
 
 # Sample news data
 news_db = [
     NewsItem(id=1, title="AI Breakthrough", content="New developments in AI...", category="Technology",
-             source="TechCrunch"),
-    NewsItem(id=2, title="Global Warming", content="Climate summit concludes...", category="Science", source="BBC"),
+             source="TechCrunch", seen=False),
+    NewsItem(id=2, title="Global Warming", content="Climate summit concludes...", category="Science", source="BBC", seen=False),
     NewsItem(id=3, title="Stock Market", content="Markets rally on new data...", category="Finance",
-             source="Bloomberg"),
+             source="Bloomberg", seen=False),
 ]
 
+@app.post("/mark-seen/{news_id}")
+async def mark_as_seen(news_id: int):
+    for news in news_db:
+        if news.id == news_id:
+            news.seen = True
+            return {"status": "success"}
+    return {"status": "not found"}
 
 @app.get("/", response_class=HTMLResponse)
 async def read_news(
