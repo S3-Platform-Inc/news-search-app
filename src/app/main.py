@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI, Request, Query
@@ -6,6 +7,9 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from typing import List, Optional, Dict
 from datetime import datetime
+
+from src.repositories.databases.remote.analysis import grouped_docs_with_anal
+from src.repositories.databases.remote.schema import S3PDocumentCard
 
 app = FastAPI(title="News Feed API")
 templates_dir = Path(__file__).parent / "templates"
@@ -60,6 +64,11 @@ async def mark_as_seen(news_id: int):
             return {"status": "success"}
     return {"status": "not found"}
 
+@app.get("/app/documents")
+async def api_documents(limit: int):
+    docs = grouped_docs_with_anal(limit)
+
+    return [asdict(doc) for doc in docs]
 
 @app.get("/", response_class=HTMLResponse)
 async def read_news(
