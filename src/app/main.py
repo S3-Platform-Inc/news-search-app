@@ -1,6 +1,5 @@
-# main.py
 from pathlib import Path
-
+from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI, Request, Query
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -11,9 +10,10 @@ app = FastAPI(title="News Feed API")
 templates_dir = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(templates_dir))
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 keyword_lists = ['НСПК', 'Мошенничество']
 
-# Mock database
 class NewsItem(BaseModel):
     id: int
     title: str
