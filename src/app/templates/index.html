@@ -58,6 +58,28 @@
 <!--                        <label class="form-check-label" for="showSeenCheck">Показать только прочитанные</label>-->
 <!--                    </div>-->
 
+                    <!-- Add this hidden input -->
+                    <input type="hidden" name="seen_filter" id="seen-filter-input" value="{{ request.query_params.get('seen_filter', '') }}">
+
+                    <!-- Button Group for Toggle -->
+                    <div class="mb-3">
+                        <label class="form-label">Фильтр по просмотру</label>
+                        <div class="btn-group w-100" role="group" aria-label="Seen filter">
+                            <button type="button" class="btn btn-outline-secondary seen-toggle-btn" data-value="">Все</button>
+                            <button type="button" class="btn btn-outline-secondary seen-toggle-btn" data-value="seen">Прочитанные</button>
+                            <button type="button" class="btn btn-outline-secondary seen-toggle-btn" data-value="unseen">Непрочитанные</button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Сортировка</label>
+                        <select name="sort_by" class="form-select">
+                            <option value="">По умолчанию</option>
+                            <option value="newest" {% if request.query_params.get('sort_by') == 'newest' %}selected{% endif %}>Сначала новые</option>
+                            <option value="oldest" {% if request.query_params.get('sort_by') == 'oldest' %}selected{% endif %}>Сначала старые</option>
+                        </select>
+                    </div>
+
                     <!-- Keyword Filters -->
                     <h5 class="mt-4">Списки ключевых слов</h5>
 
@@ -77,18 +99,7 @@
                         </div>
                     {% endfor %}
 
-                    <!-- Add this hidden input -->
-                    <input type="hidden" name="seen_filter" id="seen-filter-input" value="{{ request.query_params.get('seen_filter', '') }}">
 
-                    <!-- Button Group for Toggle -->
-                    <div class="mb-3">
-                        <label class="form-label">Фильтр по просмотру</label>
-                        <div class="btn-group w-100" role="group" aria-label="Seen filter">
-                            <button type="button" class="btn btn-outline-secondary seen-toggle-btn" data-value="">Все</button>
-                            <button type="button" class="btn btn-outline-secondary seen-toggle-btn" data-value="seen">Прочитанные</button>
-                            <button type="button" class="btn btn-outline-secondary seen-toggle-btn" data-value="unseen">Непрочитанные</button>
-                        </div>
-                    </div>
 
                     <button type="submit" class="btn btn-primary w-100">Применить фильтр</button>
                 </form>
@@ -105,8 +116,10 @@
                                     <div class="d-flex justify-content-between">
                                         <!-- <span class="badge bg-secondary">{{ news.category }}</span> -->
                                         <small class="text-muted">{{ news.source }}</small>
+                                        <small class="text-muted"><i>{{ news.published_at.strftime('%d-%m-%Y %H:%M') }}</i></small>
                                     </div>
                                     <h5 class="card-title">{{ news.title }}</h5>
+
                                     <p class="card-text">{{ news.abstract }}</p>
                                     <a class="card-link" href={{news.link}} target="_blank" rel="noopener noreferrer">Ссылка</a>
                                     <div class="mt-2">
