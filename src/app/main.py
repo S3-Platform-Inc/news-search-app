@@ -11,12 +11,7 @@ app = FastAPI(title="News Feed API")
 templates_dir = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(templates_dir))
 
-keyword_lists = {
-    "Politics": ["government", "law", "election"],
-    "Sports": ["match", "player", "team"],
-    "Health": ["virus", "health", "hospital"],
-    "Technology": ["AI", "robot", "software"]
-}
+keyword_lists = ['НСПК', 'Мошенничество']
 
 # Mock database
 class NewsItem(BaseModel):
@@ -25,29 +20,27 @@ class NewsItem(BaseModel):
     abstract: str
     category: str
     source: str
+    link: str
     seen: bool = False  # Просмотрено
     keyword_matches: Dict[str, List[str]] = {}  # e.g., {"Politics": ["government", "law"], ...}
 
 
 # Sample news data
 news_db = [
-    NewsItem(id=1, title="AI Breakthrough", abstract="New developments in AI...", category="Technology",
-             source="TechCrunch", seen=False, keyword_matches={
-                                                                "Politics": ["law"],
-                                                                "Sports": [],
-                                                                "Health": ["virus"]
+    NewsItem(id=1, title="AI Breakthrough", abstract="Windows: клиент PuTTY или OpenSSH. Например, в PuTTY нужно выбрать тип ключа (по умолчанию — RSA) и нажать кнопку Generate. Во время генерации рекомендуется двигать курсором по серой области окна, чтобы создать псевдослучайные данные.", category="Technology",
+             link='https://example.com/', source="TechCrunch", seen=False, keyword_matches={
+                                                                "НСПК": ["law"],
+                                                                "Мошенничество": []
                                                             }),
-    NewsItem(id=2, title="Global Warming", abstract="Climate summit concludes...", category="Science", source="BBC",
-             seen=False, keyword_matches={
-                                                                "Politics": ["government"],
-                                                                "Sports": ["sport"],
-                                                                "Health": []
+    NewsItem(id=2, title="Global Warming", abstract="Climate summit concludes", category="Science", source="BBC",
+             link='https://example.com/', seen=False, keyword_matches={
+                                                                "НСПК": ["government"],
+                                                                "Мошенничество": ["sport"]
                                                             }),
-    NewsItem(id=3, title="Stock Market", abstract="Markets rally on new data...", category="Finance",
-             source="Bloomberg", seen=False, keyword_matches={
-                                                                "Politics": [],
-                                                                "Sports": [],
-                                                                "Health": []
+    NewsItem(id=3, title="Stock Market", abstract="Markets rally on new data", category="Finance",
+             link='https://example.com/', source="Bloomberg", seen=False, keyword_matches={
+                                                                "НСПК": [],
+                                                                "Мошенничество": []
                                                             }),
 ]
 
@@ -80,7 +73,7 @@ async def read_news(
         filtered_news = [n for n in filtered_news if n.source == source]
     if search:
         filtered_news = [n for n in filtered_news if
-                         search.lower() in n.title.lower() or search.lower() in n.content.lower()]
+                         search.lower() in n.title.lower() or search.lower() in n.abstract.lower()]
 
     # Dynamic keyword-based filters
     for category_name, min_count in request.query_params.items():
@@ -102,5 +95,5 @@ async def read_news(
         "news_items": filtered_news,
         "categories": list(set(n.category for n in news_db)),
         "sources": list(set(n.source for n in news_db)),
-        "keyword_categories": list(keyword_lists.keys())
+        "keyword_categories": keyword_lists
     })
