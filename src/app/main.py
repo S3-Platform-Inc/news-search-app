@@ -11,12 +11,18 @@ app = FastAPI(title="News Feed API")
 templates_dir = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(templates_dir))
 
+keyword_lists = {
+    "Politics": ["government", "law", "election"],
+    "Sports": ["match", "player", "team"],
+    "Health": ["virus", "health", "hospital"],
+    "Technology": ["AI", "robot", "software"]
+}
 
 # Mock database
 class NewsItem(BaseModel):
     id: int
     title: str
-    content: str
+    abstract: str
     category: str
     source: str
     seen: bool = False  # Просмотрено
@@ -25,19 +31,19 @@ class NewsItem(BaseModel):
 
 # Sample news data
 news_db = [
-    NewsItem(id=1, title="AI Breakthrough", content="New developments in AI...", category="Technology",
+    NewsItem(id=1, title="AI Breakthrough", abstract="New developments in AI...", category="Technology",
              source="TechCrunch", seen=False, keyword_matches={
                                                                 "Politics": ["law"],
                                                                 "Sports": [],
                                                                 "Health": ["virus"]
                                                             }),
-    NewsItem(id=2, title="Global Warming", content="Climate summit concludes...", category="Science", source="BBC",
+    NewsItem(id=2, title="Global Warming", abstract="Climate summit concludes...", category="Science", source="BBC",
              seen=False, keyword_matches={
                                                                 "Politics": ["government"],
                                                                 "Sports": ["sport"],
                                                                 "Health": []
                                                             }),
-    NewsItem(id=3, title="Stock Market", content="Markets rally on new data...", category="Finance",
+    NewsItem(id=3, title="Stock Market", abstract="Markets rally on new data...", category="Finance",
              source="Bloomberg", seen=False, keyword_matches={
                                                                 "Politics": [],
                                                                 "Sports": [],
@@ -60,7 +66,10 @@ async def read_news(
         request: Request,
         category: Optional[str] = Query(None),
         source: Optional[str] = Query(None),
-        search: Optional[str] = Query(None)
+        search: Optional[str] = Query(None),
+        politics_min: Optional[int] = Query(0),
+        sports_min: Optional[int] = Query(0),
+        health_min: Optional[int] = Query(0),
 ):
     # Filter logic
     filtered_news = news_db
@@ -73,9 +82,25 @@ async def read_news(
         filtered_news = [n for n in filtered_news if
                          search.lower() in n.title.lower() or search.lower() in n.content.lower()]
 
+    # Dynamic keyword-based filters
+    for category_name, min_count in request.query_params.items():
+        if category_name.endswith("_min"):
+            keyword_category = category_name.replace("_min", "").title()
+            if keyword_category in keyword_lists:
+                try:
+                    min_val = int(min_count)
+                    if min_val > 0:
+                        filtered_news = [
+                            n for n in filtered_news
+                            if len(n.keyword_matches.get(keyword_category, [])) >= min_val
+                        ]
+                except ValueError:
+                    pass  # invalid value, skip
+
     return templates.TemplateResponse("index.html", {
         "request": request,
         "news_items": filtered_news,
         "categories": list(set(n.category for n in news_db)),
-        "sources": list(set(n.source for n in news_db))
+        "sources": list(set(n.source for n in news_db)),
+        "keyword_categories": list(keyword_lists.keys())
     })

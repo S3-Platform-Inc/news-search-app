@@ -12,6 +12,8 @@
             <div class="col-md-3 bg-light p-4">
                 <h4>Filters</h4>
                 <form method="get" action="/">
+
+                    <!-- Category select
                     <div class="mb-3">
                         <label class="form-label">Category</label>
                         <select name="category" class="form-select">
@@ -21,6 +23,7 @@
                             {% endfor %}
                         </select>
                     </div>
+                    -->
 
                     <div class="mb-3">
                         <label class="form-label">Source</label>
@@ -37,6 +40,27 @@
                         <input type="text" name="search" class="form-control" value="{{ request.query_params.get('search', '') }}">
                     </div>
 
+                    <!-- Keyword Filters -->
+                    <h5 class="mt-4">Keyword Filters</h5>
+
+                    {% for cat in keyword_categories %}
+                        <div class="mb-3">
+                            <label for="{{ cat|lower }}_min" class="form-label">{{ cat }}</label>
+                            <input
+                                type="number"
+                                id="{{ cat|lower }}_min"
+                                name="{{ cat|lower }}_min"
+                                class="form-control"
+                                min="0"
+                                placeholder="Min matches"
+                                value="{{ request.query_params.get(cat|lower ~ '_min', '0') }}"
+                            >
+                            <small class="text-muted">Введите минимальное число совпадений по тематике</small>
+                        </div>
+                    {% endfor %}
+
+
+
                     <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
                 </form>
             </div>
@@ -49,12 +73,13 @@
                         <div class="col-md-6 mb-4">
                             <div class="card h-100 {% if news.seen %}border-success{% endif %}">
                                 <div class="card-body">
-                                    <h5 class="card-title">{{ news.title }}</h5>
-                                    <p class="card-text">{{ news.content[:150] }}...</p>
                                     <div class="d-flex justify-content-between">
-                                        <span class="badge bg-secondary">{{ news.category }}</span>
+                                        <!-- <span class="badge bg-secondary">{{ news.category }}</span> -->
                                         <small class="text-muted">{{ news.source }}</small>
                                     </div>
+                                    <h5 class="card-title">{{ news.title }}</h5>
+                                    <p class="card-text">{{ news.abstract[:150] }}...</p>
+
                                     <div class="mt-2">
                                         {% set has_matches = false %}
                                         {% for category, matches in news.keyword_matches.items() %}
