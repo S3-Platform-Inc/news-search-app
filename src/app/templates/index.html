@@ -5,6 +5,17 @@
     <title>Поиск новостей</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <style>
+    .card.seen-card {
+        opacity: 0.9;
+        background-color: #f9f9f9;
+    }
+    .card.seen-card .card-title,
+    .card.seen-card .card-text,
+    .card.seen-card .text-muted {
+        color: #6c757d; /* Bootstrap gray */
+    }
+    </style>
 </head>
 <body>
     <div class="container-fluid">
@@ -41,6 +52,12 @@
                         <input type="text" name="search" class="form-control" value="{{ request.query_params.get('search', '') }}">
                     </div>
 
+<!--                    <div class="mb-3 form-check">-->
+<!--                        <input type="checkbox" name="show_seen" value="true" class="form-check-input" id="showSeenCheck"-->
+<!--                               {% if request.query_params.get('show_seen') == 'true' %}checked{% endif %}>-->
+<!--                        <label class="form-check-label" for="showSeenCheck">Показать только прочитанные</label>-->
+<!--                    </div>-->
+
                     <!-- Keyword Filters -->
                     <h5 class="mt-4">Списки ключевых слов</h5>
 
@@ -60,7 +77,18 @@
                         </div>
                     {% endfor %}
 
+                    <!-- Add this hidden input -->
+                    <input type="hidden" name="seen_filter" id="seen-filter-input" value="{{ request.query_params.get('seen_filter', '') }}">
 
+                    <!-- Button Group for Toggle -->
+                    <div class="mb-3">
+                        <label class="form-label">Фильтр по просмотру</label>
+                        <div class="btn-group w-100" role="group" aria-label="Seen filter">
+                            <button type="button" class="btn btn-outline-secondary seen-toggle-btn" data-value="">Все</button>
+                            <button type="button" class="btn btn-outline-secondary seen-toggle-btn" data-value="seen">Прочитанные</button>
+                            <button type="button" class="btn btn-outline-secondary seen-toggle-btn" data-value="unseen">Непрочитанные</button>
+                        </div>
+                    </div>
 
                     <button type="submit" class="btn btn-primary w-100">Применить фильтр</button>
                 </form>
@@ -72,7 +100,7 @@
                 <div class="row">
                     {% for news in news_items %}
                         <div class="col-md-6 mb-4">
-                            <div class="card h-100 {% if news.seen %}border-success{% endif %}">
+                            <div class="card h-100 {% if news.seen %}seen-card{% endif %}">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between">
                                         <!-- <span class="badge bg-secondary">{{ news.category }}</span> -->
@@ -114,12 +142,48 @@
         </div>
     </div>
 <script>
+    // Set initial active button based on query param
+    const seenFilter = "{{ request.query_params.get('seen_filter') }}";
+    const buttons = document.querySelectorAll(".seen-toggle-btn");
+
+    buttons.forEach(btn => {
+        if (btn.dataset.value === seenFilter) {
+            btn.classList.add("active");
+        }
+    });
+
+    // Handle button click: update hidden input and highlight active button
+    document.querySelectorAll(".seen-toggle-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            // Remove active from all
+            buttons.forEach(b => b.classList.remove("active"));
+            // Set active on clicked
+            btn.classList.add("active");
+            // Update hidden input
+            document.getElementById("seen-filter-input").value = btn.dataset.value;
+        });
+    });
+
     function markSeen(event, newsId) {
         event.preventDefault();
+
+        const card = event.target.closest('.col-md-6');
+
         fetch(`/mark-seen/${newsId}`, { method: 'POST' })
             .then(() => {
-                // Optionally update UI dynamically here
-                location.reload();  // Or do partial refresh
+                if (card) {
+                    // Add fade-out animation class
+                    card.style.transition = "opacity 0.3s ease";
+                    card.style.opacity = "0";
+
+                    // Wait for fade-out to finish before removing
+                    setTimeout(() => {
+                        card.remove();
+                    }, 300); // Duration of fade-out
+                }
+            })
+            .catch(err => {
+                console.error("Failed to mark as seen:", err);
             });
     }
 </script>

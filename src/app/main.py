@@ -65,9 +65,7 @@ async def read_news(
         category: Optional[str] = Query(None),
         source: Optional[str] = Query(None),
         search: Optional[str] = Query(None),
-        politics_min: Optional[int] = Query(0),
-        sports_min: Optional[int] = Query(0),
-        health_min: Optional[int] = Query(0),
+        seen_filter: Optional[str] = Query(None),  # "seen", "unseen", or None
 ):
     # Filter logic
     filtered_news = news_db
@@ -82,10 +80,8 @@ async def read_news(
 
     # Dynamic keyword-based filters
     for category_name, min_count in request.query_params.items():
-        print('category_name: ',category_name)
         if category_name.endswith("_min"):
             keyword_category = category_name.replace("_min", "")
-            print('keyword_category: ',keyword_category)
             if keyword_category in keyword_lists:
                 try:
                     min_val = int(min_count)
@@ -94,14 +90,20 @@ async def read_news(
                             n for n in filtered_news
                             if len(n.keyword_matches.get(keyword_category, [])) >= min_val
                         ]
-                        print('filtered_news: ',filtered_news)
                 except ValueError:
                     pass  # invalid value, skip
+
+    # Apply seen filter
+    if seen_filter == "seen":
+        filtered_news = [n for n in filtered_news if n.seen]
+    elif seen_filter == "unseen":
+        filtered_news = [n for n in filtered_news if not n.seen]
 
     return templates.TemplateResponse("index.html", {
         "request": request,
         "news_items": filtered_news,
         "categories": list(set(n.category for n in news_db)),
         "sources": list(set(n.source for n in news_db)),
-        "keyword_categories": keyword_lists
+        "keyword_categories": keyword_lists,
+        "seen_filter": seen_filter
     })
