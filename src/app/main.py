@@ -20,6 +20,7 @@ app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), na
 keyword_lists = ['НСПК', 'Мошенничество']
 
 seen_news_ids = set()
+favorite_news_ids = set()
 
 class NewsItem(BaseModel):
     id: int
@@ -30,6 +31,7 @@ class NewsItem(BaseModel):
     source: str
     link: str
     seen: bool = False  # Просмотрено
+    favorite: bool = False  # Избранное
     keyword_matches: Dict[str, List[str]] = {}  # e.g., {"Politics": ["government", "law"], ...}
 
 
@@ -77,9 +79,17 @@ def convert_doc_to_news_item(doc: S3PDocumentCard) -> NewsItem:
         source=doc.refer.name or "Unknown",
         link=doc.document.link,
         seen=doc.document.id in seen_news_ids,  # Check against seen set
+        favorite=doc.document.id in favorite_news_ids,  # Add favorite status
         keyword_matches=keyword_matches
     )
 
+@app.post("/mark-favorite/{news_id}")
+async def mark_as_favorite(news_id: int):
+    if news_id in favorite_news_ids:
+        favorite_news_ids.remove(news_id)
+    else:
+        favorite_news_ids.add(news_id)
+    return {"status": "success", "favorite": news_id in favorite_news_ids}
 
 @app.post("/mark-seen/{news_id}")
 async def mark_as_seen(news_id: int):
@@ -139,6 +149,7 @@ async def read_news(
         source: Optional[str] = Query(None),
         search: Optional[str] = Query(None),
         seen_filter: Optional[str] = Query(None),  # "seen", "unseen", or None
+        favorite_filter: Optional[str] = Query(None),
         sort_by: Optional[str] = Query(None),
 ):
     # Step 1: Fetch all documents from the database
@@ -183,6 +194,12 @@ async def read_news(
     elif seen_filter == "unseen":
         filtered_news = [n for n in filtered_news if not n.seen]
 
+    # New favorite filter
+    if favorite_filter == "favorited":
+        filtered_news = [n for n in filtered_news if n.favorite]
+    elif favorite_filter == "not_favorited":
+        filtered_news = [n for n in filtered_news if not n.favorite]
+
     # Apply sorting
     if sort_by == "newest":
         filtered_news.sort(key=lambda x: x.published_at, reverse=True)
@@ -196,5 +213,6 @@ async def read_news(
         "sources": all_sources,
         "keyword_categories": keyword_lists,
         "sort_by": sort_by,
+        "favorite_filter": favorite_filter,
         "seen_filter": seen_filter
     })

@@ -71,6 +71,17 @@
                         </div>
                     </div>
 
+                    <!-- Favorite Filter -->
+                    <div class="mb-3">
+                        <label class="form-label">Фильтр по избранному</label>
+                        <div class="btn-group w-100" role="group" aria-label="Favorite filter">
+                            <button type="button" class="btn btn-outline-secondary favorite-toggle-btn" data-value="">Все</button>
+                            <button type="button" class="btn btn-outline-secondary favorite-toggle-btn" data-value="favorited">Избранные</button>
+                            <button type="button" class="btn btn-outline-secondary favorite-toggle-btn" data-value="not_favorited">Не избранные</button>
+                        </div>
+                        <input type="hidden" name="favorite_filter" id="favorite-filter-input" value="{{ request.query_params.get('favorite_filter', '') }}">
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label">Сортировка</label>
                         <select name="sort_by" class="form-select">
@@ -146,6 +157,16 @@
                                     {% else %}
                                         <small class="text-success mt-2 d-block">✓ Прочитано</small>
                                     {% endif %}
+
+                                    <!-- Add/Remove Favorite Button -->
+                                    <form onsubmit="markFavorite(event, {{ news.id }}, this)" class="mt-3">
+                                        <button
+                                            type="submit"
+                                            class="btn btn-sm {{ 'btn-outline-warning' if news.favorite else 'btn-outline-secondary' }}"
+                                        >
+                                            {{ 'Remove from Favorites' if news.favorite else 'Add to Favorites' }}
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -158,6 +179,10 @@
     // Set initial active button based on query param
     const seenFilter = "{{ request.query_params.get('seen_filter') }}";
     const buttons = document.querySelectorAll(".seen-toggle-btn");
+
+    // Set initial active button for favorite filter
+    const favoriteFilter = "{{ request.query_params.get('favorite_filter') }}";
+    const favoriteButtons = document.querySelectorAll(".favorite-toggle-btn");
 
     buttons.forEach(btn => {
         if (btn.dataset.value === seenFilter) {
@@ -199,6 +224,43 @@
                 console.error("Failed to mark as seen:", err);
             });
     }
+
+
+    favoriteButtons.forEach(btn => {
+        if (btn.dataset.value === favoriteFilter) {
+            btn.classList.add("active");
+        }
+    });
+
+    // Handle favorite filter button clicks
+    favoriteButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+            // Remove active from all
+            favoriteButtons.forEach(b => b.classList.remove("active"));
+            // Set active on clicked
+            btn.classList.add("active");
+            // Update hidden input
+            document.getElementById("favorite-filter-input").value = btn.dataset.value;
+        });
+    });
+
+    function markFavorite(event, newsId, form) {
+    event.preventDefault();
+    const button = form.querySelector("button");
+    fetch(`/mark-favorite/${newsId}`, { method: "POST" })
+        .then(response => response.json())
+        .then(data => {
+            // Update button text and style
+            if (data.favorite) {
+                button.textContent = "Remove from Favorites";
+                button.classList.replace("btn-outline-secondary", "btn-outline-warning");
+            } else {
+                button.textContent = "Add to Favorites";
+                button.classList.replace("btn-outline-warning", "btn-outline-secondary");
+            }
+        })
+        .catch(err => console.error("Failed to toggle favorite:", err));
+}
 </script>
 </body>
 </html>
