@@ -19,6 +19,8 @@ app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), na
 
 keyword_lists = ['НСПК', 'Мошенничество']
 
+seen_news_ids = set()
+
 class NewsItem(BaseModel):
     id: int
     title: str
@@ -56,18 +58,78 @@ news_db = [
 ]
 
 
+def convert_doc_to_news_item(doc: S3PDocumentCard) -> NewsItem:
+    # Build keyword_matches dictionary
+    keyword_matches = {
+        kd.id: list(kd.elements.keys())  # Extract keywords from elements dict
+        for kd in doc.keywords
+    }
+
+    # Derive category (example: use source name; adjust as needed)
+    category = doc.refer.name or "Uncategorized"
+
+    return NewsItem(
+        id=doc.document.id,
+        title=doc.document.title,
+        abstract=doc.document.abstract or "",
+        published_at=doc.document.published,
+        category=category,
+        source=doc.refer.name or "Unknown",
+        link=doc.document.link,
+        seen=doc.document.id in seen_news_ids,  # Check against seen set
+        keyword_matches=keyword_matches
+    )
+
+
 @app.post("/mark-seen/{news_id}")
 async def mark_as_seen(news_id: int):
-    for news in news_db:
-        if news.id == news_id:
-            news.seen = True
-            return {"status": "success"}
-    return {"status": "not found"}
+    seen_news_ids.add(news_id)
+    return {"status": "success"}
+
 
 @app.get("/app/documents")
 async def api_documents(limit: int):
     docs = grouped_docs_with_anal(limit)
+    # **docs:**
+    # output = cursor.fetchall()
+    # if output:
+    #     out = []
+    #
+    #     for row in output:
+    #         out.append(S3PDocumentCard(
+    #             S3PDocument(id=row[0], title=row[1], link=row[2], published=row[3], abstract=row[4], text=None,
+    #                         storage=None, other=None, loaded=None),
+    #             S3PRefer(id=row[5], name=row[6], type=None, loaded=None),
+    #             [
+    #                 KeywordDict(key, elements)
+    #                 for key, elements in dict(row[8]).items()
+    #             ],
+    #             row[7],
+    #         ))
+    #
+    #     return out
+    # return []
+    # То есть возвращает список из элементов DataClass, где каждый док это:
+    #     document: S3PDocument
+    #     refer: S3PRefer
+    #     keywords: list[KeywordDict]
+    #     anal_time: datetime
 
+    # Каждый из документов списка преобразует в JSON
+    # Например:
+    # @dataclass
+    # class C:
+    #     x: int
+    #     y: int
+    #
+    # c = C(1, 2)
+    # assert asdict(c) == {'x': 1, 'y': 2}
+    # А что он сделает с объектом S3PDocument?
+    # asdict(doc):
+    #   {'document': S3PDocument???,
+    #    'refer': S3PRefer???,
+    #    'keywords': list[KeywordDict],
+    #    'anal_time': datetime}
     return [asdict(doc) for doc in docs]
 
 @app.get("/", response_class=HTMLResponse)
@@ -79,8 +141,18 @@ async def read_news(
         seen_filter: Optional[str] = Query(None),  # "seen", "unseen", or None
         sort_by: Optional[str] = Query(None),
 ):
-    # Filter logic
-    filtered_news = news_db
+    # Step 1: Fetch all documents from the database
+    docs = grouped_docs_with_anal(limit=100)  # Adjust limit as needed
+
+    # Step 2: Convert all documents to NewsItem objects
+    all_news_items = [convert_doc_to_news_item(doc) for doc in docs]
+
+    # Step 3: Extract all unique categories and sources
+    all_categories = list(set(n.category for n in all_news_items))
+    all_sources = list(set(n.source for n in all_news_items))
+
+    # Step 4: Apply filters to a separate list for display
+    filtered_news = all_news_items.copy()
 
     if category:
         filtered_news = [n for n in filtered_news if n.category == category]
@@ -120,8 +192,8 @@ async def read_news(
     return templates.TemplateResponse("index.html", {
         "request": request,
         "news_items": filtered_news,
-        "categories": list(set(n.category for n in news_db)),
-        "sources": list(set(n.source for n in news_db)),
+        "categories": all_categories,
+        "sources": all_sources,
         "keyword_categories": keyword_lists,
         "sort_by": sort_by,
         "seen_filter": seen_filter
