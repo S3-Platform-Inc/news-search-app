@@ -19,3 +19,8 @@
 ## Запуск
 1. `uv sync`
 2. `uv run uvicorn src.app.main:app --reload --port 8000`
+
+## Dev Запуск в Docker
+1. `uv sync`
+2. `uv pip freeze > requirements.txt`
+3. `docker-compose -f compose.dev.yaml up --build`
