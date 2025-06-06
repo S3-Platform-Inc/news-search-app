@@ -1,0 +1,53 @@
+# Comments are provided throughout this file to help you get started.
+# If you need more help, visit the Docker Compose reference guide at
+# https://docs.docker.com/go/compose-spec-reference/
+
+# Here the instructions define your application as a service called "server".
+# This service is built from the Dockerfile in the current directory.
+# You can add other services your application may depend on here, such as a
+# databases or a cache. For examples, see the Awesome Compose repository:
+# https://github.com/docker/awesome-compose
+services:
+
+  web-app:
+    build:
+      context: .
+    ports:
+      - 8000:8000
+    environment:
+      - EXTRA_DB_HOST=s3p-database
+      - EXTRA_DB_PORT=5432
+      - EXTRA_DB_NANE=sppIntegrateDB
+      - EXTRA_DB_USER=postgres
+      - EXTRA_DB_PASSWORD=default-password
+    networks:
+      - postgres_network
+
+  s3p-database:
+    platform: "linux/amd64"
+    image: "ghcr.io/s3-platform-inc/s3p-database:dev"
+    restart: unless-stopped
+    environment:
+     - POSTGRES_USER=postgres
+     - POSTGRES_DB=sppIntegrateDB
+     - POSTGRES_PASSWORD=default-password
+    ports:
+      - 9999:5432
+    expose:
+     - 5432
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-sppIntegrateDB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - postgres_network
+
+volumes:
+  postgres_data:
+
+networks:
+  postgres_network:
+    driver: bridge
+

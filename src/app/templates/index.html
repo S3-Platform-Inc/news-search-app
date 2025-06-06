@@ -1,0 +1,266 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Поиск новостей</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <style>
+    .card.seen-card {
+        opacity: 0.9;
+        background-color: #f9f9f9;
+    }
+    .card.seen-card .card-title,
+    .card.seen-card .card-text,
+    .card.seen-card .text-muted {
+        color: #6c757d; /* Bootstrap gray */
+    }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Filter Sidebar -->
+            <div class="col-md-3 bg-light p-4">
+                <h4>Фильтры</h4>
+                <form method="get" action="/">
+
+                    <!-- Category select
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select name="category" class="form-select">
+                            <option value="">All</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat }}" {% if request.query_params.get('category') == cat %}selected{% endif %}>{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    -->
+
+                    <div class="mb-3">
+                        <label class="form-label">Источник</label>
+                        <select name="source" class="form-select">
+                            <option value="">Все</option>
+                            {% for src in sources %}
+                                <option value="{{ src }}" {% if request.query_params.get('source') == src %}selected{% endif %}>{{ src }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Поиск</label>
+                        <input type="text" name="search" class="form-control" value="{{ request.query_params.get('search', '') }}">
+                    </div>
+
+<!--                    <div class="mb-3 form-check">-->
+<!--                        <input type="checkbox" name="show_seen" value="true" class="form-check-input" id="showSeenCheck"-->
+<!--                               {% if request.query_params.get('show_seen') == 'true' %}checked{% endif %}>-->
+<!--                        <label class="form-check-label" for="showSeenCheck">Показать только прочитанные</label>-->
+<!--                    </div>-->
+
+                    <!-- Add this hidden input -->
+                    <input type="hidden" name="seen_filter" id="seen-filter-input" value="{{ request.query_params.get('seen_filter', '') }}">
+
+                    <!-- Button Group for Toggle -->
+                    <div class="mb-3">
+                        <label class="form-label">Фильтр по просмотру</label>
+                        <div class="btn-group w-100" role="group" aria-label="Seen filter">
+                            <button type="button" class="btn btn-outline-secondary seen-toggle-btn" data-value="">Все</button>
+                            <button type="button" class="btn btn-outline-secondary seen-toggle-btn" data-value="seen">Прочитанные</button>
+                            <button type="button" class="btn btn-outline-secondary seen-toggle-btn" data-value="unseen">Непрочитанные</button>
+                        </div>
+                    </div>
+
+                    <!-- Favorite Filter -->
+                    <div class="mb-3">
+                        <label class="form-label">Фильтр по избранному</label>
+                        <div class="btn-group w-100" role="group" aria-label="Favorite filter">
+                            <button type="button" class="btn btn-outline-secondary favorite-toggle-btn" data-value="">Все</button>
+                            <button type="button" class="btn btn-outline-secondary favorite-toggle-btn" data-value="favorited">Избранные</button>
+                            <button type="button" class="btn btn-outline-secondary favorite-toggle-btn" data-value="not_favorited">Не избранные</button>
+                        </div>
+                        <input type="hidden" name="favorite_filter" id="favorite-filter-input" value="{{ request.query_params.get('favorite_filter', '') }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Сортировка</label>
+                        <select name="sort_by" class="form-select">
+                            <option value="">По умолчанию</option>
+                            <option value="newest" {% if request.query_params.get('sort_by') == 'newest' %}selected{% endif %}>Сначала новые</option>
+                            <option value="oldest" {% if request.query_params.get('sort_by') == 'oldest' %}selected{% endif %}>Сначала старые</option>
+                        </select>
+                    </div>
+
+                    <!-- Keyword Filters -->
+                    <h5 class="mt-4">Списки ключевых слов</h5>
+
+                    {% for cat in keyword_categories %}
+                        <div class="mb-3">
+                            <label for="{{ cat }}_min" class="form-label">{{ cat }}</label>
+                            <input
+                                type="number"
+                                id="{{ cat }}_min"
+                                name="{{ cat }}_min"
+                                class="form-control"
+                                min="0"
+                                placeholder="Min matches"
+                                value="{{ request.query_params.get(cat ~ '_min', '0') }}"
+                            >
+                            <small class="text-muted">Требуемое минимальное число совпадений</small>
+                        </div>
+                    {% endfor %}
+
+
+
+                    <button type="submit" class="btn btn-primary w-100">Применить фильтр</button>
+                </form>
+            </div>
+
+            <!-- News Feed -->
+            <div class="col-md-9 p-4">
+                <h2>Новости</h2>
+                <div class="row">
+                    {% for news in news_items %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 {% if news.seen %}seen-card{% endif %}">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <!-- <span class="badge bg-secondary">{{ news.category }}</span> -->
+                                        <small class="text-muted">{{ news.source }}</small>
+                                        <small class="text-muted"><i>{{ news.published_at.strftime('%d-%m-%Y %H:%M') }}</i></small>
+                                    </div>
+                                    <h5 class="card-title">{{ news.title }}</h5>
+
+                                    <p class="card-text">{{ news.abstract }}</p>
+                                    <a class="card-link" href={{news.link}} target="_blank" rel="noopener noreferrer">Ссылка</a>
+                                    <div class="mt-2">
+                                        {% set has_matches = false %}
+                                        {% for category, matches in news.keyword_matches.items() %}
+                                            {% if matches %}
+                                                <span class="badge bg-info me-1">
+                                                    {{ category }}: {{ matches|length }}
+                                                </span>
+                                                {% set has_matches = true %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        <!--
+                                        {% if not has_matches %}
+                                            <small class="text-muted">No keyword matches</small>
+                                        {% endif %}
+                                        -->
+                                    </div>
+                                    <!-- Mark as Seen Button -->
+                                    {% if not news.seen %}
+                                        <form onsubmit="markSeen(event, {{ news.id }})" class="mt-3">
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">Прочитать</button>
+                                        </form>
+                                    {% else %}
+                                        <small class="text-success mt-2 d-block">✓ Прочитано</small>
+                                    {% endif %}
+
+                                    <!-- Add/Remove Favorite Button -->
+                                    <form onsubmit="markFavorite(event, {{ news.id }}, this)" class="mt-3">
+                                        <button
+                                            type="submit"
+                                            class="btn btn-sm {{ 'btn-outline-warning' if news.favorite else 'btn-outline-secondary' }}"
+                                        >
+                                            {{ 'Удалить из избранного' if news.favorite else 'В избранное' }}
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+<script>
+    // Set initial active button based on query param
+    const seenFilter = "{{ request.query_params.get('seen_filter') }}";
+    const buttons = document.querySelectorAll(".seen-toggle-btn");
+
+    // Set initial active button for favorite filter
+    const favoriteFilter = "{{ request.query_params.get('favorite_filter') }}";
+    const favoriteButtons = document.querySelectorAll(".favorite-toggle-btn");
+
+    buttons.forEach(btn => {
+        if (btn.dataset.value === seenFilter) {
+            btn.classList.add("active");
+        }
+    });
+
+    // Handle button click: update hidden input and highlight active button
+    document.querySelectorAll(".seen-toggle-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            // Remove active from all
+            buttons.forEach(b => b.classList.remove("active"));
+            // Set active on clicked
+            btn.classList.add("active");
+            // Update hidden input
+            document.getElementById("seen-filter-input").value = btn.dataset.value;
+        });
+    });
+
+    function markSeen(event, newsId) {
+        event.preventDefault();
+
+        const card = event.target.closest('.col-md-6');
+
+        fetch(`/mark-seen/${newsId}`, { method: 'POST' })
+            .then(() => {
+                if (card) {
+                    // Add fade-out animation class
+                    card.style.transition = "opacity 0.3s ease";
+                    card.style.opacity = "0";
+
+                    // Wait for fade-out to finish before removing
+                    setTimeout(() => {
+                        card.remove();
+                    }, 300); // Duration of fade-out
+                }
+            })
+            .catch(err => {
+                console.error("Failed to mark as seen:", err);
+            });
+    }
+
+
+    favoriteButtons.forEach(btn => {
+        if (btn.dataset.value === favoriteFilter) {
+            btn.classList.add("active");
+        }
+    });
+
+    // Handle favorite filter button clicks
+    favoriteButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+            // Remove active from all
+            favoriteButtons.forEach(b => b.classList.remove("active"));
+            // Set active on clicked
+            btn.classList.add("active");
+            // Update hidden input
+            document.getElementById("favorite-filter-input").value = btn.dataset.value;
+        });
+    });
+
+    function markFavorite(event, newsId, form) {
+    event.preventDefault();
+    const button = form.querySelector("button");
+    fetch(`/mark-favorite/${newsId}`, { method: "POST" })
+        .then(response => response.json())
+        .then(data => {
+            // Update button text and style
+            if (data.favorite) {
+                button.textContent = "Удалить из избранного";
+                button.classList.replace("btn-outline-secondary", "btn-outline-warning");
+            } else {
+                button.textContent = "В избранное";
+                button.classList.replace("btn-outline-warning", "btn-outline-secondary");
+            }
+        })
+        .catch(err => console.error("Failed to toggle favorite:", err));
+}
+</script>
+</body>
+</html>

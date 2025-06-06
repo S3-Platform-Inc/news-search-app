@@ -1,31 +1,51 @@
 # src/repositories/databases/base.py
+import os
+
+import dataclasses
+
+import psycopg2
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from pydantic_settings import BaseSettings
 
-class Settings(BaseSettings):
-    APP_DB_URL: str
-    EXTRA_DB_URL: str
+# class Settings(BaseSettings):
+#     APP_DB_URL: str
+#     EXTRA_DB_URL: str
+#
+#     class Config:
+#         env_file = ".env"
+#
+# settings = Settings()
 
-    class Config:
-        env_file = ".env"
 
-settings = Settings()
+@dataclasses.dataclass
+class DatabaseSettings():
+    USERNAME: str
+    PASSWORD: str
+    HOST: str
+    PORT: str
+    DATABASE: str
 
-# Локальная БД (пользовательские данные)
-app_engine = create_engine(
-    settings.APP_DB_URL,
-    pool_size=10,
-    max_overflow=20
-)
+def load_database_settings() -> DatabaseSettings:
+    return DatabaseSettings(
+        os.getenv("EXTRA_DB_USER"),
+        os.getenv("EXTRA_DB_PASSWORD"),
+        os.getenv("EXTRA_DB_HOST"),
+        os.getenv("EXTRA_DB_PORT"),
+        os.getenv("EXTRA_DB_NANE"),
+    )
 
-# Удаленная БД (новостные данные)
-extra_engine = create_engine(
-    settings.EXTRA_DB_URL,
-    pool_size=5,
-    max_overflow=10,
-    connect_args={"sslmode": "require"}
-)
+def ps_connection(db: DatabaseSettings):
+    """
+    Create a connection to the PostgreSQL Control-database by psycopg2
+    :return:
+    """
 
-BaseLocal = declarative_base(bind=app_engine)
-BaseRemote = declarative_base(bind=extra_engine)
+    return psycopg2.connect(
+        database=db.DATABASE,
+        user=db.USERNAME,
+        password=db.PASSWORD,
+        host=db.HOST,
+        port=db.PORT
+    )
+
