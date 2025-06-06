@@ -164,7 +164,7 @@
                                             type="submit"
                                             class="btn btn-sm {{ 'btn-outline-warning' if news.favorite else 'btn-outline-secondary' }}"
                                         >
-                                            {{ 'Remove from Favorites' if news.favorite else 'Add to Favorites' }}
+                                            {{ 'Удалить из избранного' if news.favorite else 'В избранное' }}
                                         </button>
                                     </form>
                                 </div>
@@ -252,10 +252,10 @@
         .then(data => {
             // Update button text and style
             if (data.favorite) {
-                button.textContent = "Remove from Favorites";
+                button.textContent = "Удалить из избранного";
                 button.classList.replace("btn-outline-secondary", "btn-outline-warning");
             } else {
-                button.textContent = "Add to Favorites";
+                button.textContent = "В избранное";
                 button.classList.replace("btn-outline-warning", "btn-outline-secondary");
             }
         })
