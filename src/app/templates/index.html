@@ -96,7 +96,7 @@
 
                     {% for cat in keyword_categories %}
                         <div class="mb-3">
-                            <label for="{{ cat }}_min" class="form-label">{{ cat }}</label>
+                            <label for="{{ cat }}_min" class="form-label">{{ keyword_categories_dict[cat] }}</label>
                             <input
                                 type="number"
                                 id="{{ cat }}_min"
@@ -138,7 +138,7 @@
                                         {% for category, matches in news.keyword_matches.items() %}
                                             {% if matches %}
                                                 <span class="badge bg-info me-1">
-                                                    {{ category }}: {{ matches|length }}
+                                                    {{ keyword_categories_dict[category] }}: {{ matches|length }}
                                                 </span>
                                                 {% set has_matches = true %}
                                             {% endif %}

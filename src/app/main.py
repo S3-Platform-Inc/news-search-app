@@ -17,7 +17,11 @@ templates = Jinja2Templates(directory=str(templates_dir))
 
 app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 
-keyword_lists = ['НСПК', 'Мошенничество']
+keyword_lists = ['kw_company_1', 'kw_fraud_1']
+keyword_dict = {
+    'kw_company_1': 'НСПК',
+    'kw_fraud_1': 'Мошенничество',
+}
 
 seen_news_ids = set()
 favorite_news_ids = set()
@@ -212,6 +216,7 @@ async def read_news(
         "categories": all_categories,
         "sources": all_sources,
         "keyword_categories": keyword_lists,
+        "keyword_categories_dict": keyword_dict,
         "sort_by": sort_by,
         "favorite_filter": favorite_filter,
         "seen_filter": seen_filter
