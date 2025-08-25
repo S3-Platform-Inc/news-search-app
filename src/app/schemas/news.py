@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel
 from s3p_sdk.types import S3PDocument, S3PRefer
 
-from app.schemas.keywords import KeywordDict
+from src.app.schemas.keywords import KeywordDict
 
 
 class NewsBase(BaseModel):

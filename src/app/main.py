@@ -5,10 +5,10 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional
 
-from app.api.endpoints.news import get_news
-from app.core.config import settings
-from app.schemas.news import NewsBase
-from app.api.endpoints import news, keywords
+from src.app.api.endpoints.news import get_news
+from src.app.core.config import settings
+from src.app.schemas.news import NewsBase
+from src.app.api.endpoints import news, keywords
 from src.repositories.databases.remote.schema import S3PDocumentCard
 
 app = FastAPI(title=settings.PROJECT_NAME)

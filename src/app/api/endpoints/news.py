@@ -1,7 +1,7 @@
 from fastapi import APIRouter
-from app.schemas.news import NewsCard
-from repositories.databases.remote.analysis import grouped_docs_with_anal
-from repositories.databases.remote.schema import S3PDocumentCard
+from src.app.schemas.news import NewsCard
+from src.repositories.databases.remote.analysis import grouped_docs_with_anal
+from src.repositories.databases.remote.schema import S3PDocumentCard
 
 router = APIRouter()
 

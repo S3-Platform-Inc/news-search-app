@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from app.schemas.keywords import KeywordList
-from app.services.keywords_service import test_keywords
+from src.app.schemas.keywords import KeywordList
+from src.app.services.keywords_service import test_keywords
 
 router = APIRouter()
 

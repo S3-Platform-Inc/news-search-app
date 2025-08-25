@@ -1,4 +1,4 @@
-from app.schemas.keywords import KeywordList
+from src.app.schemas.keywords import KeywordList
 
 
 def test_keywords() -> list[KeywordList]:
