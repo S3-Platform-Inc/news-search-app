@@ -11,6 +11,10 @@ from src.app.schemas.news import NewsBase
 from src.app.api.endpoints import news, keywords
 from src.repositories.databases.remote.schema import S3PDocumentCard
 
+from datetime import datetime
+
+import pickle
+
 app = FastAPI(title=settings.PROJECT_NAME)
 
 # Настройка директории шаблонов
@@ -75,6 +79,59 @@ async def read_news(
 ):
     docs = await get_news(10)
     all_news_items = [convert_doc_to_news_item(doc) for doc in docs]
+
+    test_run = True
+    if test_run:
+        test_all_news_items = [NewsBase(id=288,
+                                        title='НБКИ: количество новых выданных кредиток за год сократилось на 49,7%',
+                                        abstract='Показатель составил 1,11 млн, уточнили в бюро',
+                                        published_at=datetime(2025, 8, 25, 6, 32, 25, 988222),
+                                        category='tass',
+                                        source='tass',
+                                        link='https://tass.ru/ekonomika/24862999',
+                                        seen=False,
+                                        favorite=False,
+                                        keyword_matches={'kw_fraud_1': ["Коррупция", "Мошенник"],
+                                                         'kw_company_1': ["НСПК"]}),
+                               NewsBase(id=261,
+                                        title='В одном из камчатских вузов учебный год начнется в смешанном формате',
+                                        abstract='Это связано с необходимостью завершения ремонта в здании учебного заведения, пострадавшем от землетрясения',
+                                        published_at=datetime(2025, 8, 25, 6, 43, 25, 988222),
+                                        category='tass',
+                                        source='tass',
+                                        link='https://tass.ru/obschestvo/24863209',
+                                        seen=False,
+                                        favorite=False,
+                                        keyword_matches={'kw_fraud_1': [],
+                                                         'kw_company_1': ["Система быстрых платежей"]}),
+                               NewsBase(id=1,
+                                        title='Шесть спортсменов получили травмы во время молодежного велокросса в Чехии',
+                                        abstract='Как сообщает агентство CTK, один из спортсменов был доставлен в больницу вертолетом',
+                                        published_at=datetime(2025, 8, 24, 6, 32, 25, 988222),
+                                        category='tass',
+                                        source='tass',
+                                        link='https://tass.ru/sport/24860897',
+                                        seen=False,
+                                        favorite=False,
+                                        keyword_matches={'kw_fraud_1': [], 'kw_company_1': []}),
+                               NewsBase(id=394,
+                                        title='В школы Подмосковья летом привлекли около 2,6 тыс. педагогов',
+                                        abstract='С нового учебного года к работе приступят 100 лидеров образования из разных регионов',
+                                        published_at=datetime(2025, 8, 25, 6, 32, 25, 988222),
+                                        category='tass',
+                                        source='tass',
+                                        link='https://tass.ru/obschestvo/24868625',
+                                        seen=False,
+                                        favorite=False,
+                                        keyword_matches={'kw_fraud_1': [],
+                                                         'kw_company_1': ['Национальная Система Платежных Карт',
+                                                                          'СБП']})
+                               ]
+        all_news_items = test_all_news_items
+
+    # with open('test_all_news_items.pickle', 'rb') as handle:
+    #     test_all_news_items = pickle.load(handle)
+    #     all_news_items = test_all_news_items
 
     # Step 3: Extract all unique categories and sources
     all_categories = list(set(n.category for n in all_news_items))

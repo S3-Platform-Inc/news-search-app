@@ -4,6 +4,7 @@
 <head>
     <title>Поиск новостей</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <style>
     .card.seen-card {
@@ -14,6 +15,67 @@
     .card.seen-card .card-text,
     .card.seen-card .text-muted {
         color: #6c757d; /* Bootstrap gray */
+    }
+    .keyword-badge {
+        margin: 2px;
+        font-size: 0.8rem;
+        padding: 3px 8px;
+        background-color: #e9ecef;
+        border: 1px solid #ced4da;
+        border-radius: 12px; /* Rounded corners for keywords */
+        transition: all 0.2s;
+    }
+    .keyword-badge:hover {
+        background-color: #dde0e6;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .keyword-category-btn {
+        padding: 5px 10px;
+        font-size: 0.85rem;
+        text-align: left;
+        width: 100%;
+        border: 1px solid #ced4da;
+        background-color: #f8f9fa;
+        border-radius: 12px; /* Consistent rounded corners */
+        transition: all 0.2s;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .keyword-category-btn:hover {
+        background-color: #e9ecef;
+        border-color: #adb5bd;
+    }
+    .keyword-category-btn[aria-expanded="true"] {
+        border-bottom-right-radius: 0;
+        border-bottom-left-radius: 0;
+        border-bottom: none;
+        background-color: #e9ecef;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .keyword-list {
+        border: 1px solid #ced4da;
+        border-top: none;
+        border-radius: 0 0 12px 12px; /* Match the button's corner radius */
+        padding: 10px;
+        background-color: #fff;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    .keyword-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .badge-count {
+        background-color: #4d7cff;
+        color: white;
+        border-radius: 20px;
+        padding: 2px 8px;
+        font-weight: 500;
+        font-size: 0.85rem;
     }
     </style>
 </head>
@@ -133,21 +195,52 @@
 
                                     <p class="card-text">{{ news.abstract }}</p>
                                     <a class="card-link" href={{news.link}} target="_blank" rel="noopener noreferrer">Ссылка</a>
+
+                                    <!-- Updated keyword display section -->
                                     <div class="mt-2">
-                                        {% set has_matches = false %}
+<!--                                        &lt;!&ndash; First pass: Check if there are ANY matches &ndash;&gt;-->
+<!--                                        {% set has_any_matches = false %}-->
+<!--                                        {% for category, matches in news.keyword_matches.items() %}-->
+<!--                                            {% if matches and matches|length > 0 %}-->
+<!--                                                {% set has_any_matches = true %}-->
+<!--                                            {% endif %}-->
+<!--                                        {% endfor %}-->
+
+                                        <!-- Second pass: Render the matches -->
                                         {% for category, matches in news.keyword_matches.items() %}
-                                            {% if matches %}
-                                                <span class="badge bg-info me-1">
-                                                    {{ keyword_categories_dict[category] }}: {{ matches|length }}
-                                                </span>
-                                                {% set has_matches = true %}
+                                            {% if matches and matches|length > 0 %}
+                                                <div class="keyword-category mb-2">
+                                                    <div class="keyword-header">
+                                                        <button class="keyword-category-btn"
+                                                                type="button"
+                                                                data-bs-toggle="collapse"
+                                                                data-bs-target="#keywords-{{ news.id }}-{{ category }}"
+                                                                aria-expanded="false"
+                                                                aria-controls="keywords-{{ news.id }}-{{ category }}">
+                                                            <span class="d-flex align-items-center">
+                                                                {{ keyword_categories_dict[category] }}
+                                                                <span class="badge-count ms-2">{{ matches|length }}</span>
+                                                            </span>
+                                                            <i class="bi bi-chevron-down ms-2"></i>
+                                                        </button>
+                                                    </div>
+                                                    <div class="collapse" id="keywords-{{ news.id }}-{{ category }}">
+                                                        <div class="keyword-list">
+                                                            {% for word in matches %}
+                                                                <span class="keyword-badge">
+                                                                    {{ word }}
+                                                                </span>
+                                                            {% endfor %}
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             {% endif %}
                                         {% endfor %}
-                                        <!--
-                                        {% if not has_matches %}
-                                            <small class="text-muted">No keyword matches</small>
-                                        {% endif %}
-                                        -->
+
+<!--                                        &lt;!&ndash; Now check our properly set variable &ndash;&gt;-->
+<!--                                        {% if not has_any_matches %}-->
+<!--                                            <small class="text-muted">Нет совпадений с ключевыми словами</small>-->
+<!--                                        {% endif %}-->
                                     </div>
                                     <!-- Mark as Seen Button -->
                                     {% if not news.seen %}
@@ -175,7 +268,11 @@
             </div>
         </div>
     </div>
-<script>
+
+    <!-- Add Bootstrap JS for collapse functionality -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
     // Set initial active button based on query param
     const seenFilter = "{{ request.query_params.get('seen_filter') }}";
     const buttons = document.querySelectorAll(".seen-toggle-btn");
@@ -189,6 +286,18 @@
             btn.classList.add("active");
         }
     });
+
+    // Add chevron rotation animation
+        document.querySelectorAll('.keyword-category-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const icon = this.querySelector('i');
+                if (icon) {
+                    this.classList.toggle('rotated');
+                    icon.classList.toggle('bi-chevron-down');
+                    icon.classList.toggle('bi-chevron-up');
+                }
+            });
+        });
 
     // Handle button click: update hidden input and highlight active button
     document.querySelectorAll(".seen-toggle-btn").forEach(btn => {
