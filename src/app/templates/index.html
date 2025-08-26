@@ -166,7 +166,7 @@
                                 class="form-control"
                                 min="0"
                                 placeholder="Min matches"
-                                value="{{ request.query_params.get(cat ~ '_min', '0') }}"
+                                value="{{ request.query_params.get(cat ~ '_min', '1') }}"
                             >
                             <small class="text-muted">Требуемое минимальное число совпадений</small>
                         </div>
@@ -265,6 +265,16 @@
                         </div>
                     {% endfor %}
                 </div>
+
+                <!-- Add this NO RESULTS message -->
+                {% if news_items|length == 0 %}
+                    <div class="alert alert-info mt-3">
+                        <i class="bi bi-info-circle-fill"></i>
+                        По вашему запросу не найдено ни одной новости.
+                        Попробуйте изменить параметры фильтрации.
+                    </div>
+                {% endif %}
+
             </div>
         </div>
     </div>

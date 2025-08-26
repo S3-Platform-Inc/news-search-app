@@ -77,10 +77,12 @@ async def read_news(
         favorite_filter: Optional[str] = Query(None),
         sort_by: Optional[str] = Query(None),
 ):
+
+
     docs = await get_news(10)
     all_news_items = [convert_doc_to_news_item(doc) for doc in docs]
 
-    test_run = True
+    test_run = False
     if test_run:
         test_all_news_items = [NewsBase(id=288,
                                         title='НБКИ: количество новых выданных кредиток за год сократилось на 49,7%',
@@ -150,20 +152,43 @@ async def read_news(
 
     keyword_lists = await keywords.get_keywordlist_names()
 
-    # Dynamic keyword-based filters
-    for category_name, min_count in request.query_params.items():
-        if category_name.endswith("_min"):
-            keyword_category = category_name.replace("_min", "")
-            if keyword_category in keyword_lists.keys():
-                try:
-                    min_val = int(min_count)
-                    if min_val > 0:
-                        filtered_news = [
-                            n for n in filtered_news
-                            if len(n.keyword_matches.get(keyword_category, [])) >= min_val
-                        ]
-                except ValueError:
-                    pass  # invalid value, skip
+    # # [OLD worked] Dynamic keyword-based filters
+    # for category_name, min_count in request.query_params.items():
+    #     if category_name.endswith("_min"):
+    #         keyword_category = category_name.replace("_min", "")
+    #         if keyword_category in keyword_lists.keys():
+    #             try:
+    #                 min_val = int(min_count)
+    #                 if min_val > 0:
+    #                     filtered_news = [
+    #                         n for n in filtered_news
+    #                         if len(n.keyword_matches.get(keyword_category, [])) >= min_val
+    #                     ]
+    #             except ValueError:
+    #                 pass  # invalid value, skip
+
+    # NEW works?
+    # Determine keyword filter values (with defaults)
+    keyword_filters = {}
+    for cat in keyword_lists.keys():
+        param_name = f"{cat}_min"
+        param_value = request.query_params.get(param_name)
+
+        if param_value is not None:
+            try:
+                keyword_filters[cat] = int(param_value)
+            except ValueError:
+                keyword_filters[cat] = 1  # Default to 1 for invalid values
+        else:
+            keyword_filters[cat] = 1  # Default to 1 for initial page load
+
+    # Apply ALL keyword filters (including defaults)
+    for cat, min_val in keyword_filters.items():
+        if min_val > 0:
+            filtered_news = [
+                n for n in filtered_news
+                if len(n.keyword_matches.get(cat, [])) >= min_val
+            ]
 
     # Apply seen filter
     if seen_filter == "seen":
