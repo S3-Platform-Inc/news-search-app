@@ -8,7 +8,13 @@
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <style>
 
-    .col-md-3.bg-light { min-height: 100vh !important; }
+    .col-md-3.bg-light {
+    min-height: 100vh;
+    position: sticky;
+    top: 0;
+    max-height: 100vh;
+    overflow-y: auto;
+    }
     .card.seen-card {
         opacity: 0.9;
         background-color: #f9f9f9;
