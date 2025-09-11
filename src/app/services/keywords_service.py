@@ -3,7 +3,7 @@ from src.app.schemas.keywords import KeywordList
 
 def test_keywords() -> list[KeywordList]:
     return [
-        KeywordList(id="kw_fraud_1", name="Мошенничество", words=[
+        KeywordList(id="kw_fraud_1", name="Негативный контекст", words=[
             "Афера",
             "Аферист",
             "Безнаказанно",
@@ -73,7 +73,7 @@ def test_keywords() -> list[KeywordList]:
             "Исказить",
             "Лоббировать"
         ]),
-        KeywordList(id="kw_company_1", name="НСПК", words=[
+        KeywordList(id="kw_company_1", name="Упоминание НСПК", words=[
             "НСПК",
             "Национальная система платежных карт",
             "ПС МИР",

@@ -79,7 +79,7 @@ async def read_news(
 ):
 
 
-    docs = await get_news(10)
+    docs = await get_news(50)
     all_news_items = [convert_doc_to_news_item(doc) for doc in docs]
 
     test_run = False
@@ -104,8 +104,8 @@ async def read_news(
                                         link='https://tass.ru/obschestvo/24863209',
                                         seen=False,
                                         favorite=False,
-                                        keyword_matches={'kw_fraud_1': [],
-                                                         'kw_company_1': ["Система быстрых платежей"]}),
+                                        keyword_matches={'kw_fraud_1': ['Незаконный', 'махинация'],
+                                                         'kw_company_1': []}),
                                NewsBase(id=1,
                                         title='Шесть спортсменов получили травмы во время молодежного велокросса в Чехии',
                                         abstract='Как сообщает агентство CTK, один из спортсменов был доставлен в больницу вертолетом',

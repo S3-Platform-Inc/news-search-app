@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <style>
+
+    .col-md-3.bg-light { min-height: 100vh !important; }
     .card.seen-card {
         opacity: 0.9;
         background-color: #f9f9f9;
@@ -157,20 +159,44 @@
                     <h5 class="mt-4">Списки ключевых слов</h5>
 
                     {% for cat in keyword_categories %}
-                        <div class="mb-3">
-                            <label for="{{ cat }}_min" class="form-label">{{ keyword_categories_dict[cat] }}</label>
+                        <div class="mb-3 form-check">
+                            <!-- Hidden input ensures the parameter is always sent -->
                             <input
-                                type="number"
-                                id="{{ cat }}_min"
+                                type="hidden"
                                 name="{{ cat }}_min"
-                                class="form-control"
-                                min="0"
-                                placeholder="Min matches"
-                                value="{{ request.query_params.get(cat ~ '_min', '1') }}"
+                                value="0"
                             >
-                            <small class="text-muted">Требуемое минимальное число совпадений</small>
+                            <!-- Checkbox overrides the hidden input when checked -->
+                            <input
+                                type="checkbox"
+                                id="{{ cat }}_check"
+                                name="{{ cat }}_min"
+                                value="1"
+                                class="form-check-input"
+                                {% if request.query_params.get(cat ~ '_min') == '1' %}checked{% endif %}
+                            >
+                            <label class="form-check-label" for="{{ cat }}_check">
+                                {{ keyword_categories_dict[cat] }}
+                            </label>
                         </div>
                     {% endfor %}
+
+
+<!--                    {% for cat in keyword_categories %}-->
+<!--                        <div class="mb-3">-->
+<!--                            <label for="{{ cat }}_min" class="form-label">{{ keyword_categories_dict[cat] }}</label>-->
+<!--                            <input-->
+<!--                                type="number"-->
+<!--                                id="{{ cat }}_min"-->
+<!--                                name="{{ cat }}_min"-->
+<!--                                class="form-control"-->
+<!--                                min="0"-->
+<!--                                placeholder="Min matches"-->
+<!--                                value="{{ request.query_params.get(cat ~ '_min', '1') }}"-->
+<!--                            >-->
+<!--                            <small class="text-muted">Требуемое минимальное число совпадений</small>-->
+<!--                        </div>-->
+<!--                    {% endfor %}-->
 
 
 
